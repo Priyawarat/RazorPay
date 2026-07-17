@@ -7,6 +7,7 @@ import com.priye.razorpay.merchant.dto.request.MerchantSignupRequest;
 import com.priye.razorpay.merchant.dto.response.MerchantResponse;
 import com.priye.razorpay.merchant.entity.AppUser;
 import com.priye.razorpay.merchant.entity.Merchant;
+import com.priye.razorpay.merchant.mapper.MerchantMapper;
 import com.priye.razorpay.merchant.repository.AppUserRepository;
 import com.priye.razorpay.merchant.repository.MerchantRepository;
 import com.priye.razorpay.merchant.service.AuthService;
@@ -22,6 +23,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final MerchantRepository merchantRepository;
     private final AppUserRepository appUserRepository;
+    private final MerchantMapper merchantMapper;
 
     @Override
     @Transactional
@@ -31,13 +33,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Merchant merchant = new Merchant(); -> Old way to create, we will use Builder.
-        Merchant merchant = Merchant.builder()
-                .businessType(request.businessType())
-                .businessName(request.businessName())
-                .name(request.name())
-                .email(request.email())
-                .status(MerchantStatus.PENDING_KYC)
-                .build();
+        Merchant merchant = merchantMapper.toMerchantEntity(request);
+        merchant.setStatus(MerchantStatus.PENDING_KYC);
         merchant = merchantRepository.save(merchant);
 
         AppUser appUser = AppUser.builder()
@@ -48,9 +45,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         appUser = appUserRepository.save(appUser);
 
-        return new MerchantResponse(merchant.getId(), merchant.getName(),
-                merchant.getEmail(), merchant.getBusinessName(),
-                merchant.getBusinessType(), merchant.getStatus());
+        return merchantMapper.toMerchantResponse(merchant);
     }
 
 }
