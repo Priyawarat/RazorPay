@@ -8,7 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
+
     List<ApiKey> findByMerchant_Id(UUID merchantId);
 
     Optional<ApiKey> findByKeyId(String keyId);
+
 }

@@ -1,8 +1,10 @@
 package com.priye.razorpay.payment.entity;
 
+import com.priye.razorpay.common.entity.BaseEntity;
 import com.priye.razorpay.common.entity.Money;
 import com.priye.razorpay.common.enums.RefundStatus;
 import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -12,7 +14,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "refund")
-public class Refund {
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class Refund extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
