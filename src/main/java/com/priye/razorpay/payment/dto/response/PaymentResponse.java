@@ -18,7 +18,6 @@ public record PaymentResponse(
         PaymentStatus status,
         PaymentMethod method,
         Map<String, Object> methodDetails,
-        String bankReference,
         String errorCode,
         String errorDescription,
         LocalDateTime capturedAt,

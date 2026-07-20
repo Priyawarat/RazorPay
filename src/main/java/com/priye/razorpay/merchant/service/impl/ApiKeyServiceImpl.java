@@ -52,7 +52,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public List<ApiKeyResponse> list(UUID merchantId) {
-        return apiKeyMapper.toApiKeyResponseList(apiKeyRepository.findByMerchant_Id(merchantId));
+        return apiKeyMapper.toResponseList(apiKeyRepository.findByMerchant_Id(merchantId));
     }
 
     @Override

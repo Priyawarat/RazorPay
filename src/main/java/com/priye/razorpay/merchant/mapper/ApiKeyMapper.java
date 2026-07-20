@@ -13,7 +13,7 @@ import java.util.List;
 public interface ApiKeyMapper {
 
     @Mapping(target = "keySecret", source = "keySecretHash")
-    ApiKeyCreateResponse toApiKeyResponse(ApiKey apiKey);
+    ApiKeyCreateResponse toCreateResponse(ApiKey apiKey);
 
-    List<ApiKeyResponse> toApiKeyResponseList(List<ApiKey> apiKeys);
+    List<ApiKeyResponse> toResponseList(List<ApiKey> apiKeyList);
 }

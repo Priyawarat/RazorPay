@@ -3,8 +3,8 @@ package com.priye.razorpay.payment.processor.dto;
 public sealed interface PaymentProcessorResponse permits
         PaymentProcessorResponse.Pending,
         PaymentProcessorResponse.Success,
-        PaymentProcessorResponse.Failure
-{
+        PaymentProcessorResponse.Failure {
+
     record Pending(String processorReference) implements PaymentProcessorResponse {}
 
     record Success(String processorReference, String bankReference) implements PaymentProcessorResponse{}
