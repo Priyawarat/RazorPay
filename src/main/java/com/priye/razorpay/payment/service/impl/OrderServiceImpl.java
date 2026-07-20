@@ -93,14 +93,10 @@ public class OrderServiceImpl implements OrderService {
 
         List<Payment> payments = paymentRepository.findByOrder_Id(orderId);
 
-        if (payments.isEmpty()) {
-            throw new ResourceNotFoundException("NO_PAYMENT_FOUND", "MerchantId : " + merchantId + " and orderId : " + orderId);
-        }
-
 //        return payments.stream()
 //                .map(paymentMapper::toPaymentResponse)
 //                .collect(Collectors.toList());
 
-        return paymentMapper.toPaymentResponseList(payments);
+        return paymentMapper.toResponseList(payments);
     }
 }
