@@ -22,6 +22,8 @@ public class PaymentTransitionService {
 
         PaymentStatus next = paymentStateMachine.transition(payment.getStatus(), event);
 
+        payment.setStatus(next);
+
         PaymentTransitionLog paymentTransitionLog = PaymentTransitionLog.builder()
                 .payment(payment)
                 .fromStatus(payment.getStatus())
