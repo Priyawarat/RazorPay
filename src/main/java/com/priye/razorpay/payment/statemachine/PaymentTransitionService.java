@@ -19,12 +19,8 @@ public class PaymentTransitionService {
     private final PaymentStateMachine paymentStateMachine;
 
     public PaymentStatus apply(Payment payment, PaymentEvent event) {
-
         PaymentStatus next = paymentStateMachine.transition(payment.getStatus(), event);
-
-        payment.setStatus(next);
-
-        PaymentTransitionLog paymentTransitionLog = PaymentTransitionLog.builder()
+        PaymentTransitionLog log = PaymentTransitionLog.builder()
                 .payment(payment)
                 .fromStatus(payment.getStatus())
                 .event(event)
@@ -32,9 +28,8 @@ public class PaymentTransitionService {
                 .actor(PaymentActor.SYSTEM) //TODO: fetch merchant context to identify actor
                 .occurredAt(LocalDateTime.now())
                 .build();
-
-        paymentTransitionLog = paymentTransitionLogRepository.save(paymentTransitionLog);
-
+        payment.setStatus(next);
+        paymentTransitionLogRepository.save(log);
         return next;
     }
 }

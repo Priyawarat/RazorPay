@@ -15,6 +15,7 @@ import com.priye.razorpay.payment.repository.OrderRepository;
 import com.priye.razorpay.payment.repository.PaymentRepository;
 import com.priye.razorpay.payment.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,77 +27,78 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-
     private final PaymentRepository paymentRepository;
-
     private final PaymentMapper paymentMapper;
+    private final OrderMapper orderMapper;
 
-    private final OrderMapper  orderMapper;
-
-    @Value("${payment.order.default-expiry-minutes:30}")
-    private int defaultExpiryMinutes;
+    @Value("${payment.order.default-order-expiry-minutes:30}")
+    private int defaultOrderExpiryMinutes;
 
     @Override
+    @Transactional
     public OrderResponse create(UUID merchantId, CreateOrderRequest request) {
-
-        if (request.receipt()!=null && orderRepository.existsByMerchantIdAndReceipt(merchantId, request.receipt())) {
-            throw new DuplicateResourceException("ORDER_RECIPT_DUPLICATE", "Order with receipt already exists" + request.receipt());
+        if (request.receipt() != null && orderRepository.existsByMerchantIdAndReceipt(merchantId, request.receipt())) {
+            throw new DuplicateResourceException("ORDER_RECEIPT_DUPLICATE", "Order with receipt already exists: " + request.receipt());
         }
 
         OrderRecord order = OrderRecord.builder()
-                        .receipt(request.receipt())
-                        .amount(request.amount())
-                        .notes(request.notes())
-                        .merchantId(merchantId)
-                        .orderStatus(OrderStatus.CREATED)
-                .expiresAt(request.expiresAt()!=null?request.expiresAt(): LocalDateTime.now().plusMinutes(defaultExpiryMinutes))
+                .receipt(request.receipt())
+                .amount(request.amount())
+                .notes(request.notes())
+
+                .merchantId(merchantId)
+                .orderStatus(OrderStatus.CREATED)
+                .expiresAt(request.expiresAt() != null ? request.expiresAt() :
+                        LocalDateTime.now().plusMinutes(defaultOrderExpiryMinutes))
                 .build();
 
         order = orderRepository.save(order);
 
-        // TODO: send Kafka event for order created
+// TODO:        publish kafka event about order creation
 
-        return orderMapper.toOrderResponse(order);
+        return orderMapper.toResponse(order);
     }
 
     @Override
     public OrderResponse getById(UUID merchantId, UUID orderId) {
-        OrderRecord order = orderRepository.findByIdAndMerchantId(merchantId,orderId).
-                orElseThrow(() -> new ResourceNotFoundException("ORDER_NOT_FOUND", "orderId : "+ orderId));
-
-        return orderMapper.toOrderResponse(order);
-
+        OrderRecord order = orderRepository.findByIdAndMerchantId(orderId, merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        return orderMapper.toResponse(order);
     }
 
     @Override
     @Transactional
     public OrderResponse cancel(UUID merchantId, UUID orderId) {
-        OrderRecord order = orderRepository.findByIdAndMerchantId(merchantId,orderId).
-                orElseThrow(() -> new ResourceNotFoundException("ORDER_NOT_FOUND", "orderId : "+ orderId));
+        OrderRecord order = orderRepository.findByIdAndMerchantId(orderId, merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
 
         if(order.getOrderStatus() == OrderStatus.CANCELLED || order.getOrderStatus() == OrderStatus.PAID) {
-            throw new BusinessRuleViolationException("ORDER_CANNOT_CANCEL", "Can not CANCEL order with STATUS : " + order.getOrderStatus());
+            throw new BusinessRuleViolationException("ORDER_CANNOT_CANCEL",
+                    "Cannot cancel order with status: "+order.getOrderStatus().name());
         }
 
         order.setOrderStatus(OrderStatus.CANCELLED);
         order = orderRepository.save(order);
-        return orderMapper.toOrderResponse(order);
+
+        return orderMapper.toResponse(order);
     }
 
     @Override
-    public List<PaymentResponse> getByMerchantId(UUID merchantId, UUID orderId) {
-        OrderRecord order = orderRepository.findByIdAndMerchantId(merchantId,orderId).
-                orElseThrow(() -> new ResourceNotFoundException("ORDER_NOT_FOUND", "orderId : "+ orderId));
+    public List<PaymentResponse> listPayments(UUID merchantId, UUID orderId) {
+        OrderRecord order = orderRepository.findByIdAndMerchantId(orderId, merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
 
-        List<Payment> payments = paymentRepository.findByOrder_Id(orderId);
+        List<Payment> paymentList = paymentRepository.findByOrder_Id(order);
 
-//        return payments.stream()
-//                .map(paymentMapper::toPaymentResponse)
-//                .collect(Collectors.toList());
+//        return paymentList.stream().map(
+//                payment -> paymentMapper.toResponse(payment)
+//        ).collect(Collectors.toList());
 
-        return paymentMapper.toResponseList(payments);
+        return paymentMapper.toResponseList(paymentList);
     }
 }
