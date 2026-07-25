@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.encrypt.BytesEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ public class VaultServiceImpl implements VaultService {
     private final PaymentProcessorRouter paymentProcessorRouter;
 
     @Override
+    @Transactional
     public TokenizeResponse tokenize(TokenizeRequest request, UUID merchantId) {
 
         String lastFour = request.pan().substring(request.pan().length() - 4);
@@ -60,7 +62,7 @@ public class VaultServiceImpl implements VaultService {
                 .cardHolderName(request.cardHolderName())
                 .build());
 
-        String token  = "tok_" + RandomizerUtil.randomBase64(32);
+        String token = "tok_" + RandomizerUtil.randomBase64(32);
 
         cardTokenRepository.save(CardToken.builder()
                 .vaultCard(vaultCard)
@@ -96,16 +98,11 @@ public class VaultServiceImpl implements VaultService {
             log.info("Vault charge registered, token={}****", token.substring(0, 4));
 
             return response;
-
         } catch (Exception e) {
-
             log.warn("Vault charge failed, token={}****", token.substring(0, 4));
             return new PaymentProcessorResponse.Failure("VAULT_CHARGE_FAILED", e.getMessage());
-
         } finally {
-
             if (panBytes != null) Arrays.fill(panBytes, (byte) 0);
-
         }
     }
 

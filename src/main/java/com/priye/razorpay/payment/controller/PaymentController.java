@@ -11,23 +11,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@RequestMapping("/v1/payment")
+@RequestMapping("/v1/payments")
 @RestController
 @RequiredArgsConstructor
 public class PaymentController {
 
     private final PaymentService paymentService;
 
-    UUID merchantId = UUID.fromString("f99e0705-a3d9-4f17-acab-b54d28e2a49a"); // TODO: replace with merchant context
+    UUID merchantId = UUID.fromString("268e9972-8452-4dfb-b161-b4c3bf118e44"); // TODO: replace with merchant context
 
-    @PostMapping
-    public ResponseEntity<PaymentResponse> initiate(@RequestBody @Valid PaymentInitRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.initiate(merchantId, request));
+    @PostMapping("/init")
+    public ResponseEntity<PaymentResponse> initiate(@Valid @RequestBody PaymentInitRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(paymentService.initiate(merchantId, request));
     }
 
     @PostMapping("/{paymentId}/capture")
     public ResponseEntity<PaymentResponse> capture(@PathVariable UUID paymentId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.capture(merchantId, paymentId));
+        return ResponseEntity.ok(paymentService.capture(merchantId, paymentId));
     }
 
 }

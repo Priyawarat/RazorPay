@@ -22,34 +22,37 @@ public class NetBankingAdapter implements PaymentAdapter {
 
     @Override
     public PaymentResult initiate(PaymentRequest request) {
-
-        log.info("Initiate payment with NetBanking, paymentId :{}",request.paymentId());
+        log.info("Initiate Payment with NetBankingAdapter, paymentId: {}", request.paymentId());
 
         try {
             PaymentProcessorRequest paymentProcessorRequest = PaymentProcessorRequest.nonCard(
                     request.paymentId(),
                     PaymentMethod.NETBANKING,
                     request.amount(),
-                    request.methodDetails());
+                    request.methodDetails()
+            );
 
-            PaymentProcessorResponse paymentProcessorResponse = paymentProcessorRouter.charge(paymentProcessorRequest);
+            PaymentProcessorResponse paymentProcessorResponse =
+                    paymentProcessorRouter.charge(paymentProcessorRequest);
 
             return switch (paymentProcessorResponse) {
-                case PaymentProcessorResponse.Success success ->
-                        new PaymentResult.Success(success.bankReference());
                 case PaymentProcessorResponse.Failure failure ->
                         new PaymentResult.Failure(failure.errorCode(), failure.errorDescription());
+
                 case PaymentProcessorResponse.Pending pending ->
                         new PaymentResult.Pending(pending.processorReference());
+
+                case PaymentProcessorResponse.Success success -> new PaymentResult.Success(success.bankReference());
+
             };
-        } catch (Exception e) {
-            log.error("Error while initiating payment with NetBankingAdapter, paymentId :{}, error: {}", request.paymentId(), e.getMessage());
-            return new PaymentResult.Failure("NETBANKING_INITIATION_ERROR", "Failed to initiate payment via NetBanking");
+        } catch(Exception e) {
+            log.warn("NetBanking failed, paymentId: {}", request.paymentId());
+            return new PaymentResult.Failure("NBK_FAILED", e.getMessage());
         }
     }
 
     @Override
     public PaymentResult capture(UUID paymentId) {
-        return new PaymentResult.Success("NBK_REF" + paymentId);
+        return new PaymentResult.Success("NBK_REF");
     }
 }

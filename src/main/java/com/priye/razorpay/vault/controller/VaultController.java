@@ -3,6 +3,7 @@ package com.priye.razorpay.vault.controller;
 import com.priye.razorpay.vault.dto.request.TokenizeRequest;
 import com.priye.razorpay.vault.dto.response.TokenizeResponse;
 import com.priye.razorpay.vault.service.VaultService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,8 @@ public class VaultController {
     UUID merchantId = UUID.fromString("f99e0705-a3d9-4f17-acab-b54d28e2a49a"); // TODO: replace with merchant context
 
     @PostMapping("/tokenize")
-    public ResponseEntity<TokenizeResponse> tokenize(@RequestBody TokenizeRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(vaultService.tokenize(request,merchantId));
+    public ResponseEntity<TokenizeResponse> tokenize(@Valid @RequestBody TokenizeRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(vaultService.tokenize(request, merchantId));
     }
-
 }

@@ -22,35 +22,38 @@ public class UpiPaymentAdapter implements PaymentAdapter {
 
     @Override
     public PaymentResult initiate(PaymentRequest request) {
-
-        log.info("Initiate payment with UPI, paymentId :{}",request.paymentId());
+        log.info("Initiate Payment with UPI, paymentId: {}", request.paymentId());
 
         try {
             PaymentProcessorRequest paymentProcessorRequest = PaymentProcessorRequest.nonCard(
                     request.paymentId(),
                     PaymentMethod.UPI,
                     request.amount(),
-                    request.methodDetails());
+                    request.methodDetails()
+            );
 
-            PaymentProcessorResponse paymentProcessorResponse = paymentProcessorRouter.charge(paymentProcessorRequest);
+            PaymentProcessorResponse paymentProcessorResponse =
+                    paymentProcessorRouter.charge(paymentProcessorRequest);
 
             return switch (paymentProcessorResponse) {
-                case PaymentProcessorResponse.Success success ->
-                        new PaymentResult.Success(success.bankReference());
                 case PaymentProcessorResponse.Failure failure ->
                         new PaymentResult.Failure(failure.errorCode(), failure.errorDescription());
+
                 case PaymentProcessorResponse.Pending pending ->
                         new PaymentResult.Pending(pending.processorReference());
+
+                case PaymentProcessorResponse.Success success -> new PaymentResult.Success(success.bankReference());
+
             };
-        } catch (Exception e) {
-            log.error("Error while initiating payment with UpiPaymentAdapter, paymentId :{}, error: {}", request.paymentId(), e.getMessage());
-            return new PaymentResult.Failure("UPI_INITIATION_ERROR", "Failed to initiate payment via UPI");
+        } catch(Exception e) {
+            log.warn("UPI failed, paymentId: {}", request.paymentId());
+            return new PaymentResult.Failure("UPI_FAILED", e.getMessage());
         }
     }
 
     @Override
     public PaymentResult capture(UUID paymentId) {
-
-        return new PaymentResult.Success("UPI_REF" + paymentId);
+        return new PaymentResult.Success("UPI_REF");
     }
+
 }

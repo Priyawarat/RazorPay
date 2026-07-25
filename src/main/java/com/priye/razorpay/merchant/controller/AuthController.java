@@ -1,5 +1,7 @@
 package com.priye.razorpay.merchant.controller;
 
+import com.priye.razorpay.merchant.dto.request.LoginRequest;
+import com.priye.razorpay.merchant.dto.response.LoginResponse;
 import com.priye.razorpay.merchant.dto.response.MerchantResponse;
 import com.priye.razorpay.merchant.dto.request.MerchantSignupRequest;
 import com.priye.razorpay.merchant.service.AuthService;
@@ -23,6 +25,13 @@ public class AuthController {
     public ResponseEntity<MerchantResponse> signup(@RequestBody @Valid MerchantSignupRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 authService.signup(request)
+        );
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                authService.login(request)
         );
     }
 }
